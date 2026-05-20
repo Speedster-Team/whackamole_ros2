@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="host"       default="0.0.0.0"/>
+  <arg name="port"       default="8765"/>
+  <arg name="webapp_dir" default="$(find-pkg-share whackmole_server)/webapp"/>
+
+  <node pkg="whackmole_server" exec="whackmole_node" name="whackmole" output="screen" on_exit="shutdown">
+    <param name="host" value="$(var host)"/>
+    <param name="port" value="$(var port)"/>
+  </node>
+
+  <executable cmd="npm install &amp;&amp; npm run dev" cwd="$(var webapp_dir)" output="screen" shell="true"/>
+</launch>
