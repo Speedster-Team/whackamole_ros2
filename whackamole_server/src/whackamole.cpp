@@ -1,15 +1,15 @@
 /**
- * whackmole_node — ROS 2 WebSocket bridge for the whack-a-mole robotic finger test bed.
+ * whackamole_node — ROS 2 WebSocket bridge for the whack-a-mole robotic finger test bed.
  *
  * Listens for WebSocket connections from the Next.js iPad app and translates
  * the JSON event stream into ROS topics that the motion controller can subscribe to.
  *
  * Published topics:
- *   /whackmole/target  (geometry_msgs/Point)  — dot centre in iPad CSS pixels (x, y);
+ *   /whackamole/target  (whackamole_interfaces/Point)  — dot centre in iPad CSS pixels (x, y);
  *                                               z carries the dot diameter in pixels.
  *                                               Published on every "spawn" event.
- *   /whackmole/hit_ms  (std_msgs/Int32)        — finger reaction time in ms on a hit.
- *   /whackmole/miss    (std_msgs/String)        — miss reason string (e.g. "timeout").
+ *   /whackamole/hit_ms  (std_msgs/Int32)        — finger reaction time in ms on a hit.
+ *   /whackamole/miss    (std_msgs/String)        — miss reason string (e.g. "timeout").
  *
  * Parameters:
  *   host  (string, default "0.0.0.0")  — WebSocket bind address.
@@ -24,9 +24,10 @@
  * workspace coordinates.
  */
 #include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/point.hpp>
 #include <std_msgs/msg/int32.hpp>
 #include <std_msgs/msg/string.hpp>
+
+#include "whackamole_interfaces/msg/point.hpp"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
@@ -39,21 +40,23 @@
 
 namespace beast = boost::beast;
 namespace ws_ns = beast::websocket;
-namespace net   = boost::asio;
-using tcp  = net::ip::tcp;
+namespace net = boost::asio;
+using tcp = net::ip::tcp;
 using json = nlohmann::json;
 
-class WhackmoleNode : public rclcpp::Node
+class WhackamoleNode : public rclcpp::Node
 {
 public:
-  WhackmoleNode() : Node("whackmole"), ioc_()
+  WhackamoleNode()
+  :Node("whackamole"),
+    ioc_()
   {
     declare_parameter("host", "0.0.0.0");
     declare_parameter("port", 8765);
 
-    target_pub_ = create_publisher<geometry_msgs::msg::Point>("/whackmole/target", 10);
-    hit_pub_    = create_publisher<std_msgs::msg::Int32>("/whackmole/hit_ms", 10);
-    miss_pub_   = create_publisher<std_msgs::msg::String>("/whackmole/miss", 10);
+    target_pub_ = create_publisher<whackamole_interfaces::msg::Point>("/whackamole/target", 10);
+    hit_pub_ = create_publisher<std_msgs::msg::Int32>("/whackamole/hit_ms", 10);
+    miss_pub_ = create_publisher<std_msgs::msg::String>("/whackamole/miss", 10);
 
     const auto host = get_parameter("host").as_string();
     const auto port = static_cast<uint16_t>(get_parameter("port").as_int());
@@ -63,15 +66,15 @@ public:
 
     RCLCPP_INFO(get_logger(), "listening on ws://%s:%d", host.c_str(), port);
 
-    ws_thread_ = std::thread([this] { run_server(); });
+    ws_thread_ = std::thread([this] {run_server();});
   }
 
-  ~WhackmoleNode()
+  ~WhackamoleNode()
   {
     beast::error_code ec;
     acceptor_->close(ec);
     ioc_.stop();
-    if (ws_thread_.joinable()) ws_thread_.join();
+    if (ws_thread_.joinable()) {ws_thread_.join();}
   }
 
 private:
@@ -81,12 +84,17 @@ private:
 
     if (type == "spawn") {
       const auto tgt = msg.value("target", json::object());
-      geometry_msgs::msg::Point pt;
+      const auto vp = msg.value("viewport", json::object());
+      whackamole_interfaces::msg::Point pt;
       pt.x = tgt.value("x", 0.0);
       pt.y = tgt.value("y", 0.0);
-      pt.z = msg.value("size", 0.0);  // dot size packed into z
+      pt.screen_width = vp.value("width", 0);
+      pt.screen_length = vp.value("height", 0);
+      pt.size = msg.value("size", 0.0);
       target_pub_->publish(pt);
-      RCLCPP_INFO(get_logger(), "[spawn] x=%.0f y=%.0f size=%.0f", pt.x, pt.y, pt.z);
+      RCLCPP_INFO(get_logger(),
+        "[spawn] x=%.0f y=%.0f size=%.0f screen_width=%.0f screen_length=%.0f", pt.x, pt.y, pt.size,
+        pt.screen_width, pt.screen_length);
 
     } else if (type == "hit") {
       std_msgs::msg::Int32 m;
@@ -125,9 +133,9 @@ private:
     }
 
     beast::flat_buffer buf;
-    for (;;) {
+    for (;; ) {
       ws.read(buf, ec);
-      if (ec) break;
+      if (ec) {break;}
 
       try {
         handle(json::parse(beast::buffers_to_string(buf.data())));
@@ -143,31 +151,31 @@ private:
 
   void run_server()
   {
-    for (;;) {
+    for (;; ) {
       tcp::socket socket{ioc_};
       beast::error_code ec;
       acceptor_->accept(socket, ec);
-      if (ec) break;
+      if (ec) {break;}
 
       std::thread([this, s = std::move(socket)]() mutable {
-        run_session(std::move(s));
+          run_session(std::move(s));
       }).detach();
     }
   }
 
-  rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr target_pub_;
+  rclcpp::Publisher<whackamole_interfaces::msg::Point>::SharedPtr target_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr       hit_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr      miss_pub_;
 
   net::io_context                    ioc_;
-  std::shared_ptr<tcp::acceptor>     acceptor_;
+  std::shared_ptr<tcp::acceptor> acceptor_;
   std::thread                        ws_thread_;
 };
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<WhackmoleNode>());
+  rclcpp::spin(std::make_shared<WhackamoleNode>());
   rclcpp::shutdown();
   return 0;
 }

@@ -10,10 +10,10 @@ A Next.js web app runs on an iPad. Random targets appear on screen after random 
 iPad (Next.js app)
   │  WebSocket  ws://<robot-ip>:8765
   ▼
-whackmole_node (C++ / Boost.Beast)
-  ├── /whackmole/target  →  motion controller node
-  ├── /whackmole/hit_ms  →  data logger
-  └── /whackmole/miss    →  data logger
+whackamole_node (C++ / Boost.Beast)
+  ├── /whackamole/target  →  motion controller node
+  ├── /whackamole/hit_ms  →  data logger
+  └── /whackamole/miss    →  data logger
 ```
 
 The Beast WebSocket server runs on its own thread; the rclcpp executor runs on the main thread. Publishers are thread-safe so no extra synchronisation is needed.
@@ -39,7 +39,7 @@ source install/setup.bash
 ## Launch
 
 ```bash
-ros2 launch whackmole_ros2 whackmole.launch.xml
+ros2 launch whackamole_ros2 whackamole.launch.xml
 ```
 
 This starts the ROS WebSocket node and the Next.js dev server (`npm install && npm run dev`) together. On the first launch `npm install` may take a minute; subsequent launches are fast.
@@ -54,9 +54,9 @@ The WebSocket URL pre-fills to `ws://<same-host>:8765`. Tap **Connect**.
 
 | Topic | Type | Description |
 |---|---|---|
-| `/whackmole/target` | `geometry_msgs/msg/Point` | Dot centre in iPad CSS pixels. `x`, `y` = position; `z` = dot diameter. Published on every spawn. |
-| `/whackmole/hit_ms` | `std_msgs/msg/Int32` | Reaction time in milliseconds when the finger hits the dot. |
-| `/whackmole/miss` | `std_msgs/msg/String` | Miss reason (e.g. `timeout`) when the dot expires unhit. |
+| `/whackamole/target` | `geometry_msgs/msg/Point` | Dot centre in iPad CSS pixels. `x`, `y` = position; `z` = dot diameter. Published on every spawn. |
+| `/whackamole/hit_ms` | `std_msgs/msg/Int32` | Reaction time in milliseconds when the finger hits the dot. |
+| `/whackamole/miss` | `std_msgs/msg/String` | Miss reason (e.g. `timeout`) when the dot expires unhit. |
 
 ## Parameters
 
@@ -67,23 +67,23 @@ The WebSocket URL pre-fills to `ws://<same-host>:8765`. Tap **Connect**.
 
 Override at launch:
 ```bash
-ros2 launch whackmole_ros2 whackmole.launch.xml port:=9000
+ros2 launch whackamole_ros2 whackamole.launch.xml port:=9000
 ```
 
 ## Coordinate system
 
-All `x`/`y` values in `/whackmole/target` are **CSS pixels in the iPad viewport**, origin top-left. The `hello` message logged at connection time includes the viewport size, play area bounds, and device pixel ratio — use these to calibrate the mapping from screen pixels to your robot's workspace frame.
+All `x`/`y` values in `/whackamole/target` are **CSS pixels in the iPad viewport**, origin top-left. The `hello` message logged at connection time includes the viewport size, play area bounds, and device pixel ratio — use these to calibrate the mapping from screen pixels to your robot's workspace frame.
 
 ## Package structure
 
 ```
-src/whackmole_ros2/
+src/whackamole_ros2/
   CMakeLists.txt
   package.xml
   src/
-    whackmole_node.cpp    C++ ROS node + Beast WebSocket server
+    whackamole_node.cpp    C++ ROS node + Beast WebSocket server
   launch/
-    whackmole.launch.xml  starts node + npm dev server
+    whackamole.launch.xml  starts node + npm dev server
   webapp/
     app/                  Next.js source (page.tsx, layout.tsx, globals.css)
     package.json

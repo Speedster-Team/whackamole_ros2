@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Whackmole — robotic finger test bed",
+  title: "Whackamole — robotic finger test bed",
   description: "Whack-a-mole reaction-time test bed for a robotic finger.",
 };
 

@@ -37,9 +37,9 @@ const MIN_DELAY_MS = 600;
 const MAX_DELAY_MS = 2400;
 const ACTIVE_TIMEOUT_MS = 5000;
 const DEFAULT_WS_URL = "ws://localhost:8765";
-const STORAGE_WS = "whackmole.wsUrl";
-const STORAGE_SETTINGS = "whackmole.settings";
-const STORAGE_HISTORY = "whackmole.history";
+const STORAGE_WS = "whackamole.wsUrl";
+const STORAGE_SETTINGS = "whackamole.settings";
+const STORAGE_HISTORY = "whackamole.history";
 const HISTORY_LIMIT = 500;
 
 const DEFAULT_SETTINGS: Settings = {
@@ -99,7 +99,7 @@ function fmtTime(ts: number) {
   return d.toLocaleTimeString();
 }
 
-export default function WhackMolePage() {
+export default function WhackAMolePage() {
   const [wsUrl, setWsUrl] = useState(DEFAULT_WS_URL);
   const [status, setStatus] = useState<Status>("disconnected");
   const [error, setError] = useState<string | null>(null);
