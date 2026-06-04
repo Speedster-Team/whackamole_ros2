@@ -462,7 +462,7 @@ export default function WhackAMolePage() {
     if (hits.length === 0) {
       return { avg: null, best: null, count: 0, misses: history.length - hits.length };
     }
-    const times = hits.slice(-50).map((h) => h.reactionMs as number);
+    const times = hits.slice(0, 50).map((h) => h.reactionMs as number);
     const avg = times.reduce((a, b) => a + b, 0) / times.length;
     return {
       avg: Math.round(avg),
