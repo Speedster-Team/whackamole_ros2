@@ -92,7 +92,7 @@ private:
       pt.screen_length = vp.value("height", 0);
       pt.size = msg.value("size", 0.0);
       target_pub_->publish(pt);
-      RCLCPP_INFO(get_logger(),
+      RCLCPP_DEBUG(get_logger(),
         "[spawn] x=%.0f y=%.0f size=%.0f screen_width=%.0f screen_length=%.0f", pt.x, pt.y, pt.size,
         pt.screen_width, pt.screen_length);
 
@@ -100,28 +100,28 @@ private:
       std_msgs::msg::Int32 m;
       m.data = msg.value("reactionMs", 0);
       hit_pub_->publish(m);
-      RCLCPP_INFO(get_logger(), "[hit] reaction=%dms", m.data);
+      RCLCPP_DEBUG(get_logger(), "[hit] reaction=%dms", m.data);
 
     } else if (type == "miss") {
       std_msgs::msg::String m;
       m.data = msg.value("reason", std::string{"unknown"});
       miss_pub_->publish(m);
-      RCLCPP_INFO(get_logger(), "[miss] reason=%s", m.data.c_str());
+      RCLCPP_DEBUG(get_logger(), "[miss] reason=%s", m.data.c_str());
 
     } else if (type == "hello") {
       const auto vp = msg.value("viewport", json::object());
-      RCLCPP_INFO(get_logger(), "[paired] viewport=%dx%d",
+      RCLCPP_DEBUG(get_logger(), "[paired] viewport=%dx%d",
         vp.value("width", 0), vp.value("height", 0));
 
     } else if (type == "stop") {
-      RCLCPP_INFO(get_logger(), "[stop]");
+      RCLCPP_DEBUG(get_logger(), "[stop]");
     }
   }
 
   void run_session(tcp::socket socket)
   {
     const auto peer = socket.remote_endpoint();
-    RCLCPP_INFO(get_logger(), "[connect] %s:%d",
+    RCLCPP_DEBUG(get_logger(), "[connect] %s:%d",
       peer.address().to_string().c_str(), peer.port());
 
     ws_ns::stream<tcp::socket> ws{std::move(socket)};
@@ -145,7 +145,7 @@ private:
       buf.consume(buf.size());
     }
 
-    RCLCPP_INFO(get_logger(), "[disconnect] %s:%d",
+    RCLCPP_DEBUG(get_logger(), "[disconnect] %s:%d",
       peer.address().to_string().c_str(), peer.port());
   }
 
