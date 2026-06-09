@@ -3,11 +3,16 @@
   <arg name="host"       default="0.0.0.0"/>
   <arg name="port"       default="8765"/>
   <arg name="webapp_dir" default="$(find-pkg-share whackamole_server)/webapp"/>
+  <arg name="webapp_port" default="4000"/>
 
-  <node pkg="whackamole_server" exec="whackamole_node" name="whackamole" output="screen" on_exit="shutdown">
+  <arg name="use_ros" default="true" description="Enable the use of rviz for visualization.">
+    <choice value="true" />
+    <choice value="false" />
+  </arg>  
+  <node pkg="whackamole_server" exec="whackamole_node" name="whackamole" output="screen" if="$(eval '\'$(var use_ros)\'==\'true\'')" on_exit="shutdown">
     <param name="host" value="$(var host)"/>
     <param name="port" value="$(var port)"/>
   </node>
 
-  <executable cmd="npm install &amp;&amp; npm run dev" cwd="$(var webapp_dir)" output="screen" shell="true"/>
+  <executable cmd="npm install &amp;&amp; npx next dev -p $(var webapp_port)" cwd="$(var webapp_dir)" output="screen" shell="true"/>
 </launch>
